@@ -36,6 +36,60 @@ options(dplyr.summarise.inform = FALSE)
 
 
 
+## Background
+The Gamma distribution models positively skewed, non-negative data, making it the ideal distribution to model a variety of public health phenomena, such as:
+
+- **Survival analysis**: The Gamma distribution is a common choice for frailty models in survival analysis (@balanTutorialFrailtyModels2020)
+
+- **Compartmental models for disease transmission**: SEIR models can replace the typical Exponential distribution with a Gamma distribution for more realistic models of disease transmission (@lloydRealisticDistributionsInfectious2001), (@wearingAppropriateModelsManagement2005)
+
+- **Gene expression variability** Gene expression variability is typically modeled using the Negative Binomial distribution, which can be written as a Gamma-Poisson mixture model. (@hafemeisterNormalizationVarianceStabilization2019), (@wangGeneExpressionDistribution2018)
+
+
+### Case Study: Time Until the 3rd Patient Arrival
+
+Consider an **outpatient clinic** where patients arrive as a Poisson process at $\lambda=5$ per hour (about one every 12 minutes).  
+Let $T_3$ be the total time from opening until the **third** arrival—so all three nurses have patients.
+
+Then $T_3\sim\mathrm{Gamma}(\alpha=3,\lambda=5)$, and:
+
+- $\mathbb E[T_3]=\frac{3}{5}=0.6$ hr ($\approx36$ min),
+- $\Pr(T_3>20\text{ min}) = 1-F_{\Gamma}(1/3;3,5)\approx0.26$,
+- the hazard increases over time because $\alpha>1$.
+
+This model helps **staffing and surge planning**, showing how quickly capacity becomes fully used after opening.
+
+
+### Current Uses in Biostatistics and Public Health
+
+- **Survival analysis:** Models waiting times with *increasing or decreasing* hazards (beyond exponential).  
+- **Reliability/biomedical devices:** Time to failure in multi-component systems.  
+- **Health operations:** Total service or queue time for multiple sequential tasks.  
+- **Bayesian inference:** Conjugate prior for Poisson and Exponential rates.  
+- **Epidemiology:** Time from exposure to onset when incubation involves multiple stages.
+
+The Gamma is often replaced by **Weibull** or **log-normal** when data show stronger tail behavior, but it remains analytically convenient and interpretable.
+
+
+## Example with Data: Time to the Third Arrival
+
+Simulate 400 “days,” each observing the time until the **3rd** patient arrives.  
+Estimate $(\alpha,\lambda)$ via **Method of Moments (MoM)** and **Maximum Likelihood (MLE)**, and compare.
+
+```{r}
+set.seed(20251103)
+
+alpha_true  <- 3
+lambda_true <- 5     # per hour
+n_days <- 400
+
+# Total time to 3rd arrival (sum of 3 exponential waits)
+Talpha <- replicate(n_days, sum(rexp(alpha_true, rate = lambda_true)))
+
+head(Talpha)
+mean(Talpha); var(Talpha)
+```
+
 ## Overview
 When we derived the Exponential Distribution, we started with a Poisson process with rate $\lambda$ and time interval length $t$, and we asked "how long will we have to wait until we see the first patient?" The **Erlang Distribution**^[<https://en.wikipedia.org/wiki/Erlang_distribution>] extends this to the total waiting time until patient number $\alpha\in\mathbb{N}$ arrives, and the **Gamma Distribution**^[<https://en.wikipedia.org/wiki/Gamma_distribution>] generalizes this to any $\alpha\in\mathbb{R}$, removing the restriction that $\alpha$ need be an integer. For this lesson, I'm following Clay Ford's process^[<https://www.clayford.net/statistics/deriving-the-gamma-distribution/>] to derive these distributions, but I'm deviating a bit where I think I can add some clarity. We will derive the Erlang Distribution first (because it follows a similar process to deriving the Exponential Distribution), then we will extend our derivation to the Gamma Distribution.
 
@@ -544,14 +598,33 @@ For a discussion of numerical routines related to the MLEs for the Gamma with bo
 
 ## Exercises
 
+### Problem 1
+
 The $\chi^2$ Distribution is a special case of the Gamma Distribution with $\alpha = \nu/2$ and $\lambda = 1/2$.
 
 1. Use "integration like a statistician" to show that the $\chi^2_{\nu}$ Distribution is a proper distribution.
 2. Show that the MGF is $M_t(s) = (1 - 2s)^{-\nu/2}$.
 3. Think about the $\nu$ parameter of this distribution. In what cases would $\nu$ be unknown?
 
-Other exercises to be determined.
+### Problem 2
 
+
+Demonstrate that a sum of independent exponential-distributed random variables follow a Gamma distribution.
+
+**Solution**:
+
+Let $X_i \sim \text{Exp}(\lambda)$ and $Y = \sum\limits_{i=1}^{n}X_i$
+
+
+\begin{split}
+M_X(t) &= \frac{1}{1-\beta t}, \quad t < \frac{1}{\beta} \\
+
+M_Y(t) &= [M_X(t)]^n \\
+
+&= [\frac{1}{1-\beta t}]^n \\
+
+&= M_Y(t), Y \sim \text{Gamma}(n, \beta)
+\end{split}
 
 ## Footnotes 
 
